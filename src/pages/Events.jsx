@@ -472,7 +472,7 @@ export default function Events() {
                       style={{ width: '100%' }}
                       size="small"
                     >
-                      {tagList.map((tag) => (
+                      {tagList && tagList.map((tag) => (
                         <MenuItem key={tag._id} value={tag._id}>
                           {`${tag.name} - ${tag.tag_type}`}
                         </MenuItem>
