@@ -26,7 +26,7 @@ export default function DashboardAppPage() {
   return (
     <>
       <Helmet>
-        <title> Dashboard | MOONTV </title>
+        <title> Dashboard | PB-BANK </title>
       </Helmet>
 
       <Container maxWidth="xl">
