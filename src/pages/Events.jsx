@@ -364,7 +364,7 @@ export default function Events() {
               <CardHeader title="Recommended Events" />
               <BoxContainer>
                 <Stack spacing={3} sx={{ p: 3, pr: 0 }}>
-                  {events.length === 0 ? (
+                  {events && events.length === 0 ? (
                     <Typography variant="body1">Currently, there are no recommended events.</Typography>
                   ) : (
                     events.map((data) => (

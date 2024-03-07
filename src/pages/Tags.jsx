@@ -309,7 +309,7 @@ export default function Tags() {
               <CardHeader title="Recommended Tags" />
               <BoxContainer>
                 <Stack spacing={3} sx={{ p: 3, pr: 0 }}>
-                  {tags.length === 0 ? (
+                  {tags && tags.length === 0 ? (
                     <Typography variant="body1">Currently, there are no recommended tags.</Typography>
                   ) : (
                     tags.map((tag) => (
