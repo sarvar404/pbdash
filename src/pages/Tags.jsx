@@ -312,7 +312,7 @@ export default function Tags() {
                   {tags && tags.length === 0 ? (
                     <Typography variant="body1">Currently, there are no recommended tags.</Typography>
                   ) : (
-                    tags.map((tag) => (
+                    tags && tags.map((tag) => (
                       <>
                         <Grid item key={tag._id} xs={12} md={12} lg={12}>
                           <Stack direction="row" alignItems="center" spacing={3}>

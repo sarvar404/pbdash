@@ -367,7 +367,7 @@ export default function Events() {
                   {events && events.length === 0 ? (
                     <Typography variant="body1">Currently, there are no recommended events.</Typography>
                   ) : (
-                    events.map((data) => (
+                    events && events.map((data) => (
                       <>
                         <Grid item key={data._id} xs={12} md={12} lg={12}>
                           <Stack direction="row" alignItems="center" spacing={3}>
