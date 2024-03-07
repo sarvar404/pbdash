@@ -1,0 +1,48 @@
+@keyframes shakeAnimation {
+    0% { transform: translate(0, 0); }
+    20% { transform: translate(-2px, 0); }
+    40% { transform: translate(2px, 0); }
+    60% { transform: translate(-2px, 0); }
+    80% { transform: translate(2px, 0); }
+    100% { transform: translate(0, 0); }
+}
+
+.__forCardOfPlayers {
+    color: white;
+    background: #232742;
+    backdrop-filter: blur(10px);
+    height: 100%;
+    transition: transform 0.3s ease;
+    
+    &:hover {
+        transform: translate(0, 0);
+        animation: shakeAnimation 0.3s;
+    }
+}
+
+.__divOfUploadVidIcon {
+    min-height: 100vh;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+}
+
+.__dynDrop {
+    color: white;
+    background-color: #232742;
+  }
+  
+  .__dynDrop:hover, .__dynDrop.Mui-selected:hover {
+    background-color: red;
+  }
+  
+  .__dynDrop.Mui-selected {
+    background-color: #232742;
+    color: white;
+  }
+  .__dynDrop.Mui-selected {
+    color: red;
+  }
+  

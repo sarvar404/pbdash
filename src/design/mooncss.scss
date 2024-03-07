@@ -1,0 +1,27 @@
+:root {
+    --label-color: #232742;
+  }
+
+.non-underline {
+    text-decoration: none,
+}
+
+.error-message-all {
+    color: red;
+    line-height: 1.5;
+    font-size: 0.75rem;
+    font-family: 'Public Sans', sans-serif;
+    font-weight: 400;
+    text-align: left;
+    margin-top: 3px;
+    margin-right: 14px;
+    margin-bottom: 0;
+    margin-left: 14px;
+  }
+
+  /* styles.css */
+.all-svg-pvt {
+  color: black;
+}
+
+  
