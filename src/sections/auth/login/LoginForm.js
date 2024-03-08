@@ -2,11 +2,10 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 // @mui
-import { Link, Stack, IconButton, InputAdornment, TextField, Checkbox, Box, CircularProgress } from '@mui/material';
+import { Link, Stack, IconButton, InputAdornment, TextField, Checkbox, Box, CircularProgress, Alert } from '@mui/material';
 import { LoadingButton } from '@mui/lab';
 // components
 import Iconify from '../../../components/iconify';
-import PopupAlert from '../../../pages/PopupAlert';
 import { KEY_ADMIN, liveUrl, loginUrl } from '../../../enum';
 import { setUserData } from '../../../pages/context/Utils';
 import validateForm from './validateFormForLogin';
@@ -14,9 +13,8 @@ import { LoaderText, StyledBackdrop } from '../../../pages/webshowCss';
 // ----------------------------------------------------------------------
 
 export default function LoginForm() {
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
-  
-
   const [showPassword, setShowPassword] = useState(false);
 
   const handleClick = () => {
@@ -66,37 +64,46 @@ export default function LoginForm() {
     setIsLoading(true);
 
     try {
-      const response = await fetch(`${process.env.REACT_APP_BASE_URL}/api/pvt/reseller/login`, {
-        method: 'post',
-        headers: {
-          'content-type': 'application/json',
-        },
-        withCredentials: true,
-        credentials: 'include',
-        body: JSON.stringify(credentials),
-      });
-      if (response.status === 404) {
-        setSuccessMessage('Invalid user & password');
-        setIsLoading(false);
-        return;
-      }
-      const result = await response.json();
-      if (result.success === true) {
-        localStorage.setItem(KEY_ADMIN, JSON.stringify(result));
-        setSuccessMessage('Login Successful');
-        const total = JSON.parse(localStorage.getItem(KEY_ADMIN)); 
 
+
+      const data = {
+        id: credentials.email,
+        password: credentials.password
+      };
+
+      const headers = {
+        'x-security-header': '6571819fae1ec44369082bf3',
+      };
+
+      const response = await axios.post(`${process.env.REACT_APP_BASE_URL}/api/user/login`, data, { headers });
+      const result = await response?.data
+
+      
+      if (response?.data?.success === true) {
+        setCredentials({
+          email: undefined,
+          password: undefined, // Add the photo key
+        });
+
+
+        setSuccessMessage('Login Successful');
+
+        localStorage.setItem(KEY_ADMIN, JSON.stringify(result));
+        const total = JSON.parse(localStorage.getItem(KEY_ADMIN)); 
         setUserData({ total }, KEY_ADMIN);
+         // Reset user inputs after submission
         setTimeout(() => {
           navigate('/dashboard', { replace: true });
-          
         }, 2000);
+      } else {
+        setSuccessMessage('Invalid user & password');
       }
     } catch (err) {
-      setSuccessMessage('Please try again');
+      console.log(err)
+      setSuccessMessage('Invalid user & password');
+    }finally {
+      setIsLoading(false);
     }
-
-    setIsLoading(false);
   };
 
   useEffect(() => {
@@ -142,13 +149,17 @@ export default function LoginForm() {
             </Link> */}
           </Stack>
 
-          <LoadingButton fullWidth size="large" type="submit" variant="contained">
-            Login
+          <LoadingButton fullWidth size="large" type="submit" variant="contained" disabled={isSubmitting}>
+          {isSubmitting ? 'Processing...' : 'Login'}
           </LoadingButton>
         </Box>
       </form>
 
-      {successMessage !== null && <PopupAlert message={successMessage} />}
+      {successMessage !== '' && (
+        <Alert severity="success" sx={{ width: '30%', height: '20%', textAlign: 'center' }}>
+          {successMessage}
+        </Alert>
+      )}
       {/* Loader */}
       <StyledBackdrop open={isLoading}>
         <CircularProgress color="inherit" size={60} />

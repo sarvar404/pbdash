@@ -1,30 +1,40 @@
 import { useState } from 'react';
+import { Navigate, useNavigate } from 'react-router-dom';
 // @mui
 import { alpha } from '@mui/material/styles';
 import { Box, Divider, Typography, Stack, MenuItem, Avatar, IconButton, Popover } from '@mui/material';
 // mocks_
 import account from '../../../_mock/account';
+import { KEY_ADMIN, USER_INFO } from '../../../enum';
+import { fetchUserData, getStoredUserData, logoutMe } from '../../../pages/context/Utils';
 
-// ----------------------------------------------------------------------
-
-const MENU_OPTIONS = [
-  {
-    label: 'Home',
-    icon: 'eva:home-fill',
-  },
-  {
-    label: 'Profile',
-    icon: 'eva:person-fill',
-  },
-  {
-    label: 'Settings',
-    icon: 'eva:settings-2-fill',
-  },
-];
 
 // ----------------------------------------------------------------------
 
 export default function AccountPopover() {
+
+  const adminData = getStoredUserData(KEY_ADMIN);
+  const USERINFO = getStoredUserData(USER_INFO);
+  const navigate = useNavigate();
+
+  if (!adminData) {
+    Navigate('/login', { replace: true });
+  }
+
+  const username = null;
+  const email = null;
+
+  if (adminData) {
+    fetchUserData(adminData?.total?.token)
+    .then((data) => {
+      localStorage.setItem(USER_INFO, JSON.stringify(data.userDetails));
+    })
+    .catch((error) => {
+      console.error(error.message);
+    });
+
+  }
+
   const [open, setOpen] = useState(null);
 
   const handleOpen = (event) => {
@@ -35,6 +45,13 @@ export default function AccountPopover() {
     setOpen(null);
   };
 
+  const logout = () => {
+    logoutMe(KEY_ADMIN);
+
+    setTimeout(() => {
+      navigate('/login', { replace: true });
+    }, 2000);
+  };
   return (
     <>
       <IconButton
@@ -78,26 +95,17 @@ export default function AccountPopover() {
       >
         <Box sx={{ my: 1.5, px: 2.5 }}>
           <Typography variant="subtitle2" noWrap>
-            {account.displayName}
+            {USERINFO?.name}
           </Typography>
           <Typography variant="body2" sx={{ color: 'text.secondary' }} noWrap>
-            {account.email}
+          {USERINFO?.email}
           </Typography>
         </Box>
 
-        <Divider sx={{ borderStyle: 'dashed' }} />
 
-        <Stack sx={{ p: 1 }}>
-          {MENU_OPTIONS.map((option) => (
-            <MenuItem key={option.label} onClick={handleClose}>
-              {option.label}
-            </MenuItem>
-          ))}
-        </Stack>
+       
 
-        <Divider sx={{ borderStyle: 'dashed' }} />
-
-        <MenuItem onClick={handleClose} sx={{ m: 1 }}>
+        <MenuItem onClick={logout} sx={{ m: 1 }}>
           Logout
         </MenuItem>
       </Popover>

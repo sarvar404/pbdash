@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-import { faker } from '@faker-js/faker';
+
 import { Helmet } from 'react-helmet-async';
 import React, { useEffect, useState } from 'react';
 // @mui
@@ -16,7 +16,6 @@ import {
   IconButton,
   InputLabel,
   MenuItem,
-  Paper,
   Select,
   Stack,
   TextField,
@@ -24,13 +23,13 @@ import {
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
-import { Link } from 'react-router-dom';
+import { Navigate } from 'react-router-dom';
 import styled from '@emotion/styled';
-// @mui
-import { useTheme } from '@mui/material/styles';
 // sections
-import { AppNewsUpdate, AppCurrentSubject } from '../sections/@dashboard/app';
 import { LoaderText, StyledBackdrop } from './webshowCss';
+import { getStoredUserData } from './context/Utils';
+import { KEY_ADMIN } from '../enum';
+
 
 const CustomContainer = styled(Container)`
   && {
@@ -41,26 +40,13 @@ const CustomContainer = styled(Container)`
   }
 `;
 
-const CustomContainer2 = styled(Container)`
-  && {
-    margin: 20px 0 0 35px;
-    display: inline-flex;
-  }
-`;
-
 const CustomGrid = styled(Grid)`
   && {
     margin: 20px 100% 0px 55px;
   }
 `;
 
-const Item = styled(Paper)(({ theme }) => ({
-  backgroundColor: theme.palette.mode === 'dark' ? '#1A2027' : '#fff',
-  ...theme.typography.body2,
-  padding: theme.spacing(1),
-  textAlign: 'center',
-  color: theme.palette.text.secondary,
-}));
+
 
 const BoxContainer = styled(Box)({
   maxHeight: 'calc(87vh - 140px)', // Adjust this value according to your header height
@@ -72,6 +58,7 @@ const BoxContainer = styled(Box)({
 });
 
 export default function Events() {
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [events, setEvents] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -185,7 +172,7 @@ export default function Events() {
         const tagResponse = await axios.get(`${process.env.REACT_APP_BASE_URL}/api/tags/get-all-tag`, {
           headers,
         });
-        console.log(tagResponse);
+        
         setTagList(tagResponse.data.data);
       } catch (error) {
         // Handle error here
@@ -327,7 +314,7 @@ export default function Events() {
       };
       
       const response = await axios.delete(`${process.env.REACT_APP_BASE_URL}/api/events/delete-recommended-event/${eventId}`, { headers });
-      console.log(response.data.success);
+      
       if (response.data.success === true) {
         alert("Event deleted successfully");
       } else {
@@ -344,9 +331,9 @@ export default function Events() {
     }
   };
 
-  const handleUpdate = () => {
-    console.log('Update clicked');
-  };
+  // const handleUpdate = () => {
+  //   console.log('Update clicked');
+  // };
 
   return (
     <>

@@ -9,4 +9,6 @@ export const liveUrl = "http://localhost:8000/"
 //
 export const loginUrl = `${liveUrl}api/user/login`;
 //
-export const KEY_ADMIN = "adminTicket";
+export const KEY_ADMIN = "pb_bank";
+export const USER_INFO = "USERS";
+export const role = "P";

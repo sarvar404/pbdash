@@ -1,57 +1,87 @@
 import { Helmet } from 'react-helmet-async';
-import { faker } from '@faker-js/faker';
+import PropTypes from 'prop-types';
 // @mui
 import { useTheme } from '@mui/material/styles';
-import { Grid, Container, Typography } from '@mui/material';
+import SellOutlinedIcon from '@mui/icons-material/SellOutlined';
+import CalendarTodayOutlinedIcon from '@mui/icons-material/CalendarTodayOutlined';
+import { Grid, Container, Typography, Card } from '@mui/material';
+import styled from '@emotion/styled';
+import { Link } from 'react-router-dom';
 // components
-import Iconify from '../components/iconify';
-// sections
-import {
-  AppTasks,
-  AppNewsUpdate,
-  AppOrderTimeline,
-  AppCurrentVisits,
-  AppWebsiteVisits,
-  AppTrafficBySite,
-  AppWidgetSummary,
-  AppCurrentSubject,
-  AppConversionRates,
-} from '../sections/@dashboard/app';
-
 // ----------------------------------------------------------------------
+DashboardAppPage.propTypes = {
+  color: PropTypes.string,
+  icon: PropTypes.string,
+  title: PropTypes.string.isRequired,
+  total: PropTypes.number.isRequired,
+  sx: PropTypes.object,
+};
+const CustomContainer = styled(Container)`
+  && {
+    max-width: 20000px;
+    margin-left: -40px;
+    margin-right: -40px;
+    margin-top: -40px;
+  }
+`;
 
-export default function DashboardAppPage() {
+export default function DashboardAppPage({ title, total, icon, sx, ...other }) {
   const theme = useTheme();
-
+  const color1 = 'primary';
+  const color = 'info';
   return (
     <>
       <Helmet>
         <title> Dashboard | PB-BANK </title>
       </Helmet>
 
-      <Container maxWidth="xl">
-        <Typography variant="h4" sx={{ mb: 5 }}>
+      <CustomContainer maxWidth="xl">
+        <Typography variant="h4" sx={{ mb: 5, mt: 5, ml: 2 }}>
           Hi, Welcome back
         </Typography>
 
-        <Grid container spacing={3}>
+        <Grid container spacing={3} sx={{ ml: 5 }}>
           <Grid item xs={12} sm={6} md={3}>
-            <AppWidgetSummary title="Weekly Sales" total={714000} icon={'ant-design:android-filled'} />
+            <Link to="/tags" style={{ textDecoration: 'none', color: 'inherit' }}>
+              <Card
+                sx={{
+                  py: 5,
+                  boxShadow: 0,
+                  textAlign: 'center',
+                  color: (theme) => theme.palette[color1].darker,
+                  bgcolor: (theme) => theme.palette[color1].lighter,
+                  ...sx,
+                }}
+                {...other}
+              >
+                <div style={{ display: 'inline-flex', alignItems: 'center' }}>
+                  <SellOutlinedIcon sx={{ fontSize: '50px', mt: 1, mr: 1 }} />
+                  <h3>All Tags</h3>
+                </div>
+              </Card>
+            </Link>
           </Grid>
 
           <Grid item xs={12} sm={6} md={3}>
-            <AppWidgetSummary title="New Users" total={1352831} color="info" icon={'ant-design:apple-filled'} />
+            <Link to="/events" style={{ textDecoration: 'none', color: 'inherit' }}>
+              <Card
+                sx={{
+                  py: 5,
+                  boxShadow: 0,
+                  textAlign: 'center',
+                  color: (theme) => theme.palette[color].darker,
+                  bgcolor: (theme) => theme.palette[color].lighter,
+                  ...sx,
+                }}
+                {...other}
+              >
+                <div style={{ display: 'inline-flex', alignItems: 'center' }}>
+                  <CalendarTodayOutlinedIcon sx={{ fontSize: '50px', mt: 1, mr: 1 }} />
+                  <h3>All Events</h3>
+                </div>
+              </Card>
+            </Link>
           </Grid>
-
-          <Grid item xs={12} sm={6} md={3}>
-            <AppWidgetSummary title="Item Orders" total={1723315} color="warning" icon={'ant-design:windows-filled'} />
-          </Grid>
-
-          <Grid item xs={12} sm={6} md={3}>
-            <AppWidgetSummary title="Bug Reports" total={234} color="error" icon={'ant-design:bug-filled'} />
-          </Grid>
-
-        
 
           {/* <Grid item xs={12} md={6} lg={4}>
             <AppCurrentSubject
@@ -78,10 +108,8 @@ export default function DashboardAppPage() {
               }))}
             />
           </Grid> */}
-
-        
         </Grid>
-      </Container>
+      </CustomContainer>
     </>
   );
 }

@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-import { faker } from '@faker-js/faker';
+
 import { Helmet } from 'react-helmet-async';
 import React, { useEffect, useState } from 'react';
 // @mui
@@ -16,7 +16,6 @@ import {
   IconButton,
   InputLabel,
   MenuItem,
-  Paper,
   Select,
   Stack,
   TextField,
@@ -24,12 +23,9 @@ import {
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
-import { Link } from 'react-router-dom';
 import styled from '@emotion/styled';
 // @mui
-import { useTheme } from '@mui/material/styles';
 // sections
-import { AppNewsUpdate, AppCurrentSubject } from '../sections/@dashboard/app';
 import { LoaderText, StyledBackdrop } from './webshowCss';
 
 const CustomContainer = styled(Container)`
@@ -41,12 +37,12 @@ const CustomContainer = styled(Container)`
   }
 `;
 
-const CustomContainer2 = styled(Container)`
-  && {
-    margin: 20px 0 0 35px;
-    display: inline-flex;
-  }
-`;
+// const CustomContainer2 = styled(Container)`
+//   && {
+//     margin: 20px 0 0 35px;
+//     display: inline-flex;
+//   }
+// `;
 
 const CustomGrid = styled(Grid)`
   && {
@@ -54,13 +50,13 @@ const CustomGrid = styled(Grid)`
   }
 `;
 
-const Item = styled(Paper)(({ theme }) => ({
-  backgroundColor: theme.palette.mode === 'dark' ? '#1A2027' : '#fff',
-  ...theme.typography.body2,
-  padding: theme.spacing(1),
-  textAlign: 'center',
-  color: theme.palette.text.secondary,
-}));
+// const Item = styled(Paper)(({ theme }) => ({
+//   backgroundColor: theme.palette.mode === 'dark' ? '#1A2027' : '#fff',
+//   ...theme.typography.body2,
+//   padding: theme.spacing(1),
+//   textAlign: 'center',
+//   color: theme.palette.text.secondary,
+// }));
 
 const BoxContainer = styled(Box)({
   maxHeight: 'calc(87vh - 140px)', // Adjust this value according to your header height
@@ -129,14 +125,14 @@ export default function Tags() {
     setSelectedImgs([...newImages]);
   };
 
-  const hasNonEmptyFields = (inputs) => {
-    return Object.entries(inputs).some(([key, value]) => {
-      if (Array.isArray(value)) {
-        return value.length > 0;
-      }
-      return value !== '' && value !== null;
-    });
-  };
+  // const hasNonEmptyFields = (inputs) => {
+  //   return Object.entries(inputs).some(([key, value]) => {
+  //     if (Array.isArray(value)) {
+  //       return value.length > 0;
+  //     }
+  //     return value !== '' && value !== null;
+  //   });
+  // };
 
   useEffect(() => {
     const fetchTags = async () => {
@@ -269,7 +265,7 @@ export default function Tags() {
       };
       
       const response = await axios.delete(`${process.env.REACT_APP_BASE_URL}/api/tags/delete-tag/${tagId}`, { headers });
-      console.log(response.data.success);
+      
       if (response.data.success === true) {
         alert("Tag deleted successfully");
       } else {
@@ -288,9 +284,9 @@ export default function Tags() {
 
   // In your JSX, pass the tag ID to the handleDelete function
 
-  const handleUpdate = () => {
-    console.log('Update clicked');
-  };
+  // const handleUpdate = () => {
+  //   console.log('Update clicked');
+  // };
 
   return (
     <>
