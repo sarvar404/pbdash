@@ -71,3 +71,15 @@ const handleImageChange = (e) => {
 //         https://admin.pickneybank.com/
 
 //         sudo certbot --nginx -d admin.pickneybank.com
+
+// for api.pickneybank.com => 57.151.115.0
+// for admin.pickneybank.com => 20.49.104.56
+
+
+// i have added the domain this
+// sudo certbot --nginx -d yourdomain.com -d www.yourdomain.com
+
+// now i want to replace it to this api.pickneybank.com
+
+// sudo certbot --nginx -d api.pickneybank.com
+

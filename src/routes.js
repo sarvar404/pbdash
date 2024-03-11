@@ -1,4 +1,5 @@
-import { Navigate, useRoutes } from 'react-router-dom';
+import { useMemo } from 'react';
+import { Navigate, useNavigate, useRoutes } from 'react-router-dom';
 // layouts
 import DashboardLayout from './layouts/dashboard';
 
@@ -14,10 +15,18 @@ import { KEY_ADMIN, role } from './enum';
 
 //
 // get access
-const adminData = getStoredUserData(KEY_ADMIN);
-console.log(adminData)
 
 export default function Router() {
+  const navigate = useNavigate();
+
+  const adminData = getStoredUserData(KEY_ADMIN);
+
+  useMemo(() => {
+    if (adminData !== null) {
+      navigate('/dashboard');
+    }
+  }, []);
+
   const routes = useRoutes([
     {
       path: '/',
@@ -36,7 +45,7 @@ export default function Router() {
     {
       path: '*',
       element: <Page404 />,
-    }
+    },
   ]);
 
   return routes;

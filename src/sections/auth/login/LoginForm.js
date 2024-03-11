@@ -3,12 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 // @mui
 import {
-  Link,
   Stack,
   IconButton,
   InputAdornment,
   TextField,
-  Checkbox,
   Box,
   CircularProgress,
   Alert,
@@ -16,15 +14,17 @@ import {
 import { LoadingButton } from '@mui/lab';
 // components
 import Iconify from '../../../components/iconify';
-import { KEY_ADMIN, liveUrl, loginUrl } from '../../../enum';
+import { KEY_ADMIN } from '../../../enum';
 import { setUserData } from '../../../pages/context/Utils';
 import validateForm from './validateFormForLogin';
 import { LoaderText, StyledBackdrop } from '../../../pages/webshowCss';
 // ----------------------------------------------------------------------
 
 export default function LoginForm() {
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
+
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
   const [showPassword, setShowPassword] = useState(false);
 
   const handleClick = () => {
