@@ -2,17 +2,18 @@ import { useState } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 // @mui
 import { alpha } from '@mui/material/styles';
-import { Box, Divider, Typography, Stack, MenuItem, Avatar, IconButton, Popover } from '@mui/material';
+import { Box, Divider, Typography, Stack, MenuItem, Avatar, IconButton, Popover, CircularProgress } from '@mui/material';
 // mocks_
 import account from '../../../_mock/account';
 import { KEY_ADMIN, USER_INFO } from '../../../enum';
 import { fetchUserData, getStoredUserData, logoutMe } from '../../../pages/context/Utils';
+import { LoaderText, StyledBackdrop } from '../../../pages/webshowCss';
 
 
 // ----------------------------------------------------------------------
 
 export default function AccountPopover() {
-
+  const [isLoading, setIsLoading] = useState(false);
   const adminData = getStoredUserData(KEY_ADMIN);
   const USERINFO = getStoredUserData(USER_INFO);
   const navigate = useNavigate();
@@ -47,10 +48,9 @@ export default function AccountPopover() {
 
   const logout = () => {
     logoutMe(KEY_ADMIN);
-
     setTimeout(() => {
       navigate('/login', { replace: true });
-    }, 2000);
+    }, 1000);
   };
   return (
     <>
@@ -109,6 +109,11 @@ export default function AccountPopover() {
           Logout
         </MenuItem>
       </Popover>
+
+      <StyledBackdrop open={isLoading}>
+        <CircularProgress color="inherit" size={60} />
+        <LoaderText variant="body1">Loading...</LoaderText>
+      </StyledBackdrop>
     </>
   );
 }

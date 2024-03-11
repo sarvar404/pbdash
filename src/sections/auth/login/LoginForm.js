@@ -2,7 +2,17 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 // @mui
-import { Link, Stack, IconButton, InputAdornment, TextField, Checkbox, Box, CircularProgress, Alert } from '@mui/material';
+import {
+  Link,
+  Stack,
+  IconButton,
+  InputAdornment,
+  TextField,
+  Checkbox,
+  Box,
+  CircularProgress,
+  Alert,
+} from '@mui/material';
 import { LoadingButton } from '@mui/lab';
 // components
 import Iconify from '../../../components/iconify';
@@ -64,11 +74,9 @@ export default function LoginForm() {
     setIsLoading(true);
 
     try {
-
-
       const data = {
         id: credentials.email,
-        password: credentials.password
+        password: credentials.password,
       };
 
       const headers = {
@@ -76,38 +84,33 @@ export default function LoginForm() {
       };
 
       const response = await axios.post(`${process.env.REACT_APP_BASE_URL}/api/user/login`, data, { headers });
-      const result = await response?.data
+      const result = await response?.data;
 
-      
       if (response?.data?.success === true) {
         setCredentials({
           email: undefined,
           password: undefined, // Add the photo key
         });
-
+        navigate('/dashboard', { replace: true });
 
         setSuccessMessage('Login Successful');
 
         localStorage.setItem(KEY_ADMIN, JSON.stringify(result));
-        const total = JSON.parse(localStorage.getItem(KEY_ADMIN)); 
+        const total = JSON.parse(localStorage.getItem(KEY_ADMIN));
         setUserData({ total }, KEY_ADMIN);
-         // Reset user inputs after submission
-        setTimeout(() => {
-          navigate('/dashboard', { replace: true });
-        }, 2000);
+        // Reset user inputs after submission
       } else {
         setSuccessMessage('Invalid user & password');
       }
     } catch (err) {
-      console.log(err)
+      console.log(err);
       setSuccessMessage('Invalid user & password');
-    }finally {
+    } finally {
       setIsLoading(false);
     }
   };
 
   useEffect(() => {
-
     if (successMessage) {
       setTimeout(() => {
         setSuccessMessage(null);
@@ -120,7 +123,7 @@ export default function LoginForm() {
       {/* <Auth /> */}
       <form onSubmit={submit}>
         <Box sx={{ maxHeight: '460px', overflow: 'auto', '&::-webkit-scrollbar': { width: 0, height: 0 } }}>
-          <Stack spacing={3} sx={{mt: '10px'}}>
+          <Stack spacing={3} sx={{ mt: '10px' }}>
             <TextField name="email" label="Email address" value={credentials.email} onChange={handleInputs} />
             <p className="error-message-all">{validationErrors.email}</p>
             <TextField
@@ -150,13 +153,12 @@ export default function LoginForm() {
           </Stack>
 
           <LoadingButton fullWidth size="large" type="submit" variant="contained" disabled={isSubmitting}>
-          {isSubmitting ? 'Processing...' : 'Login'}
+            {isSubmitting ? 'Processing...' : 'Login'}
           </LoadingButton>
         </Box>
       </form>
-
       {successMessage !== '' && (
-        <Alert severity="success" sx={{ width: '30%', height: '20%', textAlign: 'center' }}>
+        <Alert severity="success" sx={{ mt: 2 }}>
           {successMessage}
         </Alert>
       )}

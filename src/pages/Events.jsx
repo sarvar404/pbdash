@@ -61,7 +61,7 @@ export default function Events() {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [events, setEvents] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [backupImg, setBackupImgs] = useState(null);
   const [selectedImgs, setSelectedImgs] = useState([]);
   const [tagList, setTagList] = useState([]);
@@ -151,6 +151,7 @@ export default function Events() {
   };
 
   useEffect(() => {
+    setIsLoading(true);
     const fetchData = async () => {
       try {
         const headers = {
