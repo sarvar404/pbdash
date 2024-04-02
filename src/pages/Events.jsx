@@ -2,7 +2,7 @@ import axios from 'axios';
 
 
 import { Helmet } from 'react-helmet-async';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 // @mui
 import {
   Alert,
@@ -59,12 +59,15 @@ const BoxContainer = styled(Box)({
 
 export default function Events() {
 
+  const logData = getStoredUserData(KEY_ADMIN);
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [events, setEvents] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [backupImg, setBackupImgs] = useState(null);
   const [selectedImgs, setSelectedImgs] = useState([]);
   const [tagList, setTagList] = useState([]);
+  const fileInputRef = useRef(null);
 
   const [userInputs, setUserInputs] = useState({
     _id: '',
@@ -119,27 +122,46 @@ export default function Events() {
 
   const handleImageChange = (e) => {
     const files = e.target.files;
-
-    // Validate up to 4 images as selected but displaying correctly 4 only
-    if (files.length > 4) {
+  
+    // Check if adding more than 4 images
+    if (selectedImgs.length + files.length > 4) {
       alert('You can upload up to 4 images.');
-
       // Optionally, you can clear the input to visually reflect the limit
       e.target.value = '';
       return;
     }
-
+  
+    // Create an array of new images
     const newImages = Array.from(files)
-      .slice(0, 4)
+      .slice(0, 4 - selectedImgs.length) // Only add images to make the total count up to 4
       .map((file) => ({
         id: Date.now(),
         photo: URL.createObjectURL(file),
         newImage: file,
       }));
-
-    // Replace the previous images with the new selection
-    setSelectedImgs([...newImages]);
+  
+    // Concatenate the new images with the existing ones
+    setSelectedImgs((prevImages) => [...prevImages, ...newImages]);
+  
+    // Backup the previous images
+    setBackupImgs([...selectedImgs]);
   };
+  
+  
+
+  const handleCancel = () => {
+    // Store a copy of the current selected images before clearing
+    // setBackupImgs([...selectedImgs]);
+    fileInputRef.current.value = '';
+    // Clear the selected images
+    setSelectedImgs([]);
+    // setUserInputs({
+    //   photo: [],
+    //   newImage: null
+    // })
+  };
+  
+  
 
   const hasNonEmptyFields = (inputs) => {
     return Object.entries(inputs).some(([key, value]) => {
@@ -155,9 +177,9 @@ export default function Events() {
     const fetchData = async () => {
       try {
         const headers = {
-          'x-security-header': '6571819fae1ec44369082bf3',
+          'x-security-header': process.env.REACT_APP_X_SECURITY_HEADER,
           authorization:
-            'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2NWU3MDlkNjI0ZDRkMzFhNWM0MWZmOGQiLCJpYXQiOjE3MDk2NDAyMjR9.iRiOk7bWrWFs8iHPxEdO04sjAXWEUsMP0Ot296wCchc',
+          `Bearer ${logData?.total?.refreshToken}`
         };
 
         // Fetch data from the first API
@@ -169,12 +191,6 @@ export default function Events() {
         );
         setEvents(eventResponse.data.data);
 
-        // Fetch data from the second API
-        const tagResponse = await axios.get(`${process.env.REACT_APP_BASE_URL}/api/tags/get-all-tag`, {
-          headers,
-        });
-        
-        setTagList(tagResponse.data.data);
       } catch (error) {
         // Handle error here
         console.error('Error fetching data:', error);
@@ -185,6 +201,47 @@ export default function Events() {
 
     fetchData();
   }, []);
+
+  const fetchTags = async (rewardType) => {
+    setIsLoading(true);
+    const headers = {
+      'x-security-header': process.env.REACT_APP_X_SECURITY_HEADER,
+      authorization:
+        `Bearer ${logData?.total?.refreshToken}`
+    };
+  
+    try {
+      const tagResponse = await axios.get(
+        `${process.env.REACT_APP_BASE_URL}/api/tags/get-all-type-tag`,
+        {
+          headers,
+          params: {
+            // Add your query parameters here
+            rewardType,
+          },
+        }
+      );
+      
+      
+  
+      if (tagResponse && tagResponse.data && tagResponse.data.data) {
+        console.log(tagResponse)
+        setTagList(tagResponse.data.data);
+      }else {
+        alert("Sorry, There is no any tag created yet to select");
+      }
+    } catch (error) {
+      console.error('Error fetching tags:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (userInputs.reward_type !== "") {
+      fetchTags(userInputs.reward_type);
+    }
+  }, [userInputs.reward_type]);  
 
   const handleTagClick = (data) => {
     let tagIds;
@@ -233,6 +290,12 @@ export default function Events() {
         return;
       }
     }
+
+    if (userInputs.stars === 0 || userInputs.stars === "0" || userInputs.stars === "00") {
+      alert('Stars cannot be 0 or Negative');
+      return;
+    }
+
     setIsSubmitting(true);
     setIsLoading(true);
     try {
@@ -275,14 +338,14 @@ export default function Events() {
 
       // Make the API call to insert or update the tag data
       const headers = {
-        'x-security-header': '6571819fae1ec44369082bf3',
+        'x-security-header': process.env.REACT_APP_X_SECURITY_HEADER,
       };
       const response = await axios.post(`${process.env.REACT_APP_BASE_URL}/api/events/add-recommended-event`, data, {
         headers,
       });
 
       if (response) {
-        setSuccessMessage(userInputs._id !== '' ? 'tag updated successfully' : 'tag inserted successfully');
+        setSuccessMessage(userInputs._id !== '' ? 'Events updated successfully' : 'Events inserted successfully');
         setSelectedImgs([]);
         setUserInputs({
           _id: '',
@@ -308,10 +371,16 @@ export default function Events() {
 
   const handleDelete = async (eventId) => {
     try {
+      // Prompt the user to confirm before deleting the record
+      const confirmed = window.confirm("Are you sure you want to delete this event?");
+      if (!confirmed) {
+        return; // Exit the function if the user cancels the deletion
+      }
+  
       setIsLoading(true);
       // Make the API call to delete the tag using both user ID and tag ID
       const headers = {
-        'x-security-header': '6571819fae1ec44369082bf3',
+        'x-security-header': process.env.REACT_APP_X_SECURITY_HEADER,
       };
       
       const response = await axios.delete(`${process.env.REACT_APP_BASE_URL}/api/events/delete-recommended-event/${eventId}`, { headers });
@@ -319,11 +388,11 @@ export default function Events() {
       if (response.data.success === true) {
         alert("Event deleted successfully");
       } else {
-        alert("response.data.message");
+        alert(response.data.message); // Display the error message from the server
         console.error('Error deleting tag:', response.data.error);
       }
     } catch (error) {
-      alert(error.response.data.message);
+      alert(error.response.data.message); // Display the error message from the server
       console.error('Error deleting tag:', error);
     } finally {
       setTimeout(() => {
@@ -331,6 +400,11 @@ export default function Events() {
       }, 1000);
     }
   };
+  
+
+  const handleReloadForm = async () => {
+    window.location.reload();
+  }
 
   // const handleUpdate = () => {
   //   console.log('Update clicked');
@@ -347,7 +421,7 @@ export default function Events() {
         </Typography> */}
 
         <Grid container spacing={2}>
-          <Grid item xs={12} md={6} lg={4}>
+          <Grid item xs={12} md={6} lg={6}>
             <Card>
               <CardHeader title="Recommended Events" />
               <BoxContainer>
@@ -355,7 +429,8 @@ export default function Events() {
                   {events && events.length === 0 ? (
                     <Typography variant="body1">Currently, there are no recommended events.</Typography>
                   ) : (
-                    events && events.map((data) => (
+                    events &&
+                    events.map((data) => (
                       <>
                         <Grid item key={data._id} xs={12} md={12} lg={12}>
                           <Stack direction="row" alignItems="center" spacing={3}>
@@ -378,8 +453,8 @@ export default function Events() {
                             </Box>
 
                             {/* Right Side: Time */}
-                            <Typography variant="caption" sx={{ pr: 3, flexShrink: 0, color: 'text.secondary' }}>
-                            <IconButton aria-label="delete" onClick={() => handleDelete(data._id)}>
+                            <Typography variant="caption" sx={{ pr: 1, flexShrink: 0, color: 'text.secondary' }}>
+                              <IconButton aria-label="delete" onClick={() => handleDelete(data._id)}>
                                 <DeleteIcon />
                               </IconButton>
                               <IconButton
@@ -400,7 +475,7 @@ export default function Events() {
             </Card>
           </Grid>
 
-          <Grid item xs={12} md={6} lg={8}>
+          <Grid item xs={12} md={6} lg={6}>
             <form onSubmit={submit}>
               <Container style={{ margin: '20px 100% 0px 35px' }}>
                 <Grid container spacing={2}>
@@ -460,11 +535,12 @@ export default function Events() {
                       style={{ width: '100%' }}
                       size="small"
                     >
-                      {tagList && tagList.map((tag) => (
-                        <MenuItem key={tag._id} value={tag._id}>
-                          {`${tag.name} - ${tag.tag_type}`}
-                        </MenuItem>
-                      ))}
+                      {tagList &&
+                        tagList.map((tag) => (
+                          <MenuItem key={tag._id} value={tag._id}>
+                            {`${tag.name} - ${tag.tag_type}`}
+                          </MenuItem>
+                        ))}
                     </Select>
                   </Grid>
 
@@ -492,7 +568,7 @@ export default function Events() {
                   </Grid>
 
                   <Grid item xs={12}>
-                    <input type="file" accept="image/*" multiple onChange={handleImageChange} />
+                    <input ref={fileInputRef} type="file" accept="image/*" multiple onChange={handleImageChange} />
                   </Grid>
                   <Grid item xs={8}>
                     {/* something */}
@@ -500,9 +576,17 @@ export default function Events() {
                 </Grid>
               </Container>
               <CustomGrid item xs={12} sm={12} lg={12} mt={2}>
-                <Button variant="contained" type="submit" disabled={isSubmitting}>
-                  {isSubmitting ? 'Submitting...' : 'Submit'}
-                </Button>
+                <Box sx={{display: 'inline-flex',whiteSpace: 'nowrap'}}>
+                  <Button variant="contained" type="submit" disabled={isSubmitting} sx={{marginRight : '2px'}}>
+                    {isSubmitting ? 'Submitting...' : 'Submit'}
+                  </Button>
+                  <Button variant="contained" disabled={isSubmitting} onClick={handleCancel} sx={{marginRight : '2px'}}>
+                    Clear Images
+                  </Button>
+                  <Button variant="contained" disabled={isSubmitting} onClick={handleReloadForm}>
+                    Clear Form
+                  </Button>
+                </Box>
               </CustomGrid>
             </form>
           </Grid>

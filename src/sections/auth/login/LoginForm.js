@@ -80,7 +80,7 @@ export default function LoginForm() {
       };
 
       const headers = {
-        'x-security-header': '6571819fae1ec44369082bf3',
+        'x-security-header': process.env.REACT_APP_X_SECURITY_HEADER,
       };
 
       const response = await axios.post(`${process.env.REACT_APP_BASE_URL}/api/user/login`, data, { headers });

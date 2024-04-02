@@ -16,7 +16,7 @@ export const logoutMe = (KEY) => {
 
 export const fetchUserData = (token) => {
   const headers = {
-    'x-security-header': '6571819fae1ec44369082bf3',
+    'x-security-header': process.env.REACT_APP_X_SECURITY_HEADER,
     authorization: `Bearer ${token}`,
   };
 
