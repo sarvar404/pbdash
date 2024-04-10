@@ -1,6 +1,5 @@
 import axios from 'axios';
 
-
 import { Helmet } from 'react-helmet-async';
 import React, { useEffect, useRef, useState } from 'react';
 // @mui
@@ -32,7 +31,6 @@ import { LoaderText, StyledBackdrop } from './webshowCss';
 import { getStoredUserData } from './context/Utils';
 import { KEY_ADMIN } from '../enum';
 
-
 const CustomContainer = styled(Container)`
   && {
     max-width: 20000px;
@@ -48,8 +46,6 @@ const CustomGrid = styled(Grid)`
   }
 `;
 
-
-
 const BoxContainer = styled(Box)({
   maxHeight: 'calc(87vh - 140px)', // Adjust this value according to your header height
   overflowY: 'auto',
@@ -60,7 +56,6 @@ const BoxContainer = styled(Box)({
 });
 
 export default function Events() {
-
   const logData = getStoredUserData(KEY_ADMIN);
 
   const [eventType, setEventType] = useState(false); // State for toggle
@@ -71,6 +66,7 @@ export default function Events() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [events, setEvents] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [imgLoader, setImgLoader] = useState(false);
   const [backupImg, setBackupImgs] = useState(null);
   const [selectedImgs, setSelectedImgs] = useState([]);
   const [tagList, setTagList] = useState([]);
@@ -85,9 +81,9 @@ export default function Events() {
     newImage: null,
     oldRecord: false,
     startAt: initialStartAt, // Initialize with current date
-    endAt: initialEndAt,     // Initialize with current date
-    frequency : 'D',
-    maxCount : 1,
+    endAt: initialEndAt, // Initialize with current date
+    frequency: 'D',
+    maxCount: 1,
   });
 
   const handleInputs = (e) => {
@@ -133,9 +129,11 @@ export default function Events() {
     }
 
     if (name === 'maxCount') {
-      if (/^\d{0,2}$/.test(value)) { // Validates that it's a number with at most 2 digits
+      if (/^\d{0,2}$/.test(value)) {
+        // Validates that it's a number with at most 2 digits
         const intValue = parseInt(value, 10); // Parse the value to an integer
-        if (intValue > 0) { // Check if the value is positive
+        if (intValue > 0) {
+          // Check if the value is positive
           setUserInputs((prevInputs) => ({
             ...prevInputs,
             [name]: intValue.toString(), // Convert back to string before setting state
@@ -147,8 +145,6 @@ export default function Events() {
         alert('Max Count must be a number with at most 2 digits.');
       }
     }
-    
-    
 
     // Handle the "stars" field
     if (name === 'stars') {
@@ -171,7 +167,6 @@ export default function Events() {
     }
   };
 
-
   const handleCancel = () => {
     setSelectedImgs([]);
   };
@@ -179,42 +174,45 @@ export default function Events() {
   const handlePosterImg = (e) => {
     setIsLoading(true);
     const files = e.target.files;
-  
+
     if (files.length === 0) {
       setIsLoading(false);
       return;
     }
-  
+
     if (selectedImgs.length + files.length > 4) {
       setIsLoading(false);
       e.target.value = '';
       alert('You can only upload a maximum of four images.');
       return;
     }
-  
+    setImgLoader(true);
     try {
       Promise.all(
         Array.from(files).map(async (file) => {
           // Check if file size is less than or equal to 5 MB
           if (file.size > 5 * 1024 * 1024) {
             setIsLoading(false);
+            setImgLoader(false);
             alert('Please select only JPG images with size less than 5 MB');
             return null; // Return null for this file
           }
-  
+
           const formData = new FormData();
           formData.append('ps-img', file, 'ps-img.jpg'); // Ensure file name is 'ps-img.jpg'
-  
+
           try {
             const response = await axios.post(`${process.env.REACT_APP_BASE_URL}/api/upload/events`, formData);
             if (response.data.success === true) {
               return response.data.data[0].imageUrl;
             }
-            alert('Error uploading image:');
+            alert('Error uploading image : Please select correct image format');
+            setImgLoader(false);
             return null;
           } catch (error) {
             console.error('Error uploading image:', error);
-            alert('Error uploading image:');
+            alert('Error uploading image : Please select correct image format');
+            setImgLoader(false);
             return null;
           }
         })
@@ -224,12 +222,12 @@ export default function Events() {
       });
     } catch (error) {
       console.error('Error uploading images:', error);
-      alert('Error uploading image:');
+      alert('Error uploading image : Please select correct image format');
+      setImgLoader(false);
     } finally {
       setIsLoading(false);
     }
   };
-  
 
   const hasNonEmptyFields = (inputs) => {
     return Object.entries(inputs).some(([key, value]) => {
@@ -272,29 +270,22 @@ export default function Events() {
     setIsLoading(true);
     const headers = {
       'x-security-header': process.env.REACT_APP_X_SECURITY_HEADER,
-      authorization:
-        `Bearer ${logData?.total?.refreshToken}`
+      authorization: `Bearer ${logData?.total?.refreshToken}`,
     };
-  
+
     try {
-      const tagResponse = await axios.get(
-        `${process.env.REACT_APP_BASE_URL}/api/tags/get-all-type-tag`,
-        {
-          headers,
-          params: {
-            // Add your query parameters here
-            rewardType,
-          },
-        }
-      );
-      
-      
-  
+      const tagResponse = await axios.get(`${process.env.REACT_APP_BASE_URL}/api/tags/get-all-type-tag`, {
+        headers,
+        params: {
+          // Add your query parameters here
+          rewardType,
+        },
+      });
+
       if (tagResponse && tagResponse.data && tagResponse.data.data) {
-        console.log(tagResponse)
         setTagList(tagResponse.data.data);
-      }else {
-        alert("Sorry, There is no any tag created yet to select");
+      } else {
+        alert('Sorry, There is no any tag created yet to select');
       }
     } catch (error) {
       console.error('Error fetching tags:', error);
@@ -304,10 +295,10 @@ export default function Events() {
   };
 
   useEffect(() => {
-    if (userInputs.reward_type !== "") {
+    if (userInputs.reward_type !== '') {
       fetchTags(userInputs.reward_type);
     }
-  }, [userInputs.reward_type]);  
+  }, [userInputs.reward_type]);
 
   const handleTagClick = (data) => {
     let tagIds;
@@ -323,12 +314,13 @@ export default function Events() {
       console.error('Invalid tags structure:', data.tags);
       return;
     }
+    setImgLoader(true);
     // Populate the form fields when a tag is clicked
     setUserInputs({
       _id: data._id,
       name: data.name,
       stars: data.stars,
-      reward_type: data.reward_type ? 'CR' : 'DR',
+      reward_type: data.reward_type === 'DR' ? 'DR' : 'CR',
       tags: tagIds,
       oldRecord: true,
       startAt: data.start_at ? data.start_at : initialStartAt,
@@ -343,7 +335,7 @@ export default function Events() {
   };
 
   const [successMessage, setSuccessMessage] = useState('');
-  
+
   const submit = async (e) => {
     e.preventDefault();
 
@@ -357,7 +349,7 @@ export default function Events() {
       return;
     }
 
-    if (userInputs.stars === 0 || userInputs.stars === "0" || userInputs.stars === "00") {
+    if (userInputs.stars === 0 || userInputs.stars === '0' || userInputs.stars === '00') {
       alert('Stars cannot be 0 or Negative');
       return;
     }
@@ -365,28 +357,26 @@ export default function Events() {
     setIsSubmitting(true);
     setIsLoading(true);
     try {
-      
       const data = {
         _id: userInputs._id,
         name: userInputs.name,
         stars: userInputs.stars,
         photo: selectedImgs,
-        event_type: userInputs.event_type, // Add the appropriate field
+        reward_type: userInputs.reward_type,
         tags: userInputs.tags, // Add the appropriate field
         is_recommended: true,
         startAt: userInputs.startAt,
         endAt: userInputs.endAt,
         eventType,
-        frequency : userInputs.frequency,
-        maxCount : userInputs.maxCount,
+        frequency: userInputs.frequency,
+        maxCount: userInputs.maxCount,
         // Add more fields as needed
       };
 
       // Make the API call to insert or update the tag data
       const headers = {
         'x-security-header': process.env.REACT_APP_X_SECURITY_HEADER,
-        authorization:
-        `Bearer ${logData?.total?.refreshToken}`
+        authorization: `Bearer ${logData?.total?.refreshToken}`,
       };
       const response = await axios.post(`${process.env.REACT_APP_BASE_URL}/api/events/add-recommended-event`, data, {
         headers,
@@ -413,10 +403,10 @@ export default function Events() {
       console.log(error.message);
       // Handle error here
       console.error('Error submitting data:', error);
-      if (error.response && error.response.data && error.response.data.error === "Event Already Exist") {
-        alert("This event already exists and cannot be changed now.");
+      if (error.response && error.response.data && error.response.data.error === 'Event Already Exist') {
+        alert('This event already exists and cannot be changed now.');
       } else {
-        alert("Service error");
+        alert('Service error');
       }
     }
 
@@ -426,21 +416,24 @@ export default function Events() {
   const handleDelete = async (eventId) => {
     try {
       // Prompt the user to confirm before deleting the record
-      const confirmed = window.confirm("Are you sure you want to delete this event?");
+      const confirmed = window.confirm('Are you sure you want to delete this event?');
       if (!confirmed) {
         return; // Exit the function if the user cancels the deletion
       }
-  
+
       setIsLoading(true);
       // Make the API call to delete the tag using both user ID and tag ID
       const headers = {
         'x-security-header': process.env.REACT_APP_X_SECURITY_HEADER,
       };
-      
-      const response = await axios.delete(`${process.env.REACT_APP_BASE_URL}/api/events/delete-recommended-event/${eventId}`, { headers });
-      
+
+      const response = await axios.delete(
+        `${process.env.REACT_APP_BASE_URL}/api/events/delete-recommended-event/${eventId}`,
+        { headers }
+      );
+
       if (response.data.success === true) {
-        alert("Event deleted successfully");
+        alert('Event deleted successfully');
       } else {
         alert(response.data.message); // Display the error message from the server
         console.error('Error deleting tag:', response.data.error);
@@ -454,11 +447,10 @@ export default function Events() {
       }, 1000);
     }
   };
-  
 
   const handleReloadForm = async () => {
     window.location.reload();
-  }
+  };
 
   // const handleUpdate = () => {
   //   console.log('Update clicked');
@@ -658,23 +650,38 @@ export default function Events() {
 
                   {/* Add other fields as needed */}
                   <Grid item xs={12} style={{ display: 'inline-flex' }}>
-                    
                     {Array.isArray(selectedImgs)
                       ? selectedImgs.map((img, index) => (
                           <Grid item xs={4} key={index} gap={2} spacing={2} mt={1}>
+                            {imgLoader} {/* Display CircularProgress if imgLoader is true */}
                             <img
                               src={img}
                               alt={`${index + 1}`}
-                              style={{ width: '100%', height: '100%', objectFit: 'cover', padding: '10px' }}
+                              style={{
+                                display: imgLoader ? 'none' : 'block',
+                                width: '100%',
+                                height: '100%',
+                                objectFit: 'cover',
+                                padding: '10px',
+                              }}
+                              onLoad={() => setImgLoader(false)} // Set imgLoader to false when image is loaded
                             />
                           </Grid>
                         ))
                       : selectedImgs.map((img, index) => (
-                          <Grid item xs={4} key={index} mt={1}>
+                          <Grid item xs={4} key={index} gap={2} spacing={2} mt={1}>
+                            {imgLoader} {/* Display CircularProgress if imgLoader is true */}
                             <img
                               src={img}
                               alt={`${index + 1}`}
-                              style={{ width: '100%', height: '100%', objectFit: 'cover', padding: '10px' }}
+                              style={{
+                                display: imgLoader ? 'none' : 'block',
+                                width: '100%',
+                                height: '100%',
+                                objectFit: 'cover',
+                                padding: '10px',
+                              }}
+                              onLoad={() => setImgLoader(false)} // Set imgLoader to false when image is loaded
                             />
                           </Grid>
                         ))}
@@ -728,6 +735,11 @@ export default function Events() {
       </CustomContainer>
 
       <StyledBackdrop open={isLoading}>
+        <CircularProgress color="inherit" size={60} />
+        <LoaderText variant="body1">Loading...</LoaderText>
+      </StyledBackdrop>
+
+      <StyledBackdrop open={imgLoader}>
         <CircularProgress color="inherit" size={60} />
         <LoaderText variant="body1">Loading...</LoaderText>
       </StyledBackdrop>
