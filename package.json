@@ -1,11 +1,11 @@
 {
-  "name": "moon-dashboard",
+  "name": "pb-dashboard",
   "author": "conexus",
   "version": "0.1.0",
   "private": true,
   "scripts": {
     "start": "react-scripts start",
-    "build": "react-scripts build",
+    "build": "react-scripts build --no-cache",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "lint": "eslint --ext .js,.jsx ./src",
@@ -13,7 +13,7 @@
     "clear-all": "rm -rf build node_modules",
     "re-start": "rm -rf build node_modules && yarn install && yarn start",
     "re-build": "rm -rf build node_modules && yarn install && yarn build"
-  },
+  },  
   "eslintConfig": {
     "extends": [
       "react-app"

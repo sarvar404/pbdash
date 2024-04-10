@@ -106,53 +106,63 @@ export default function Tags() {
     }
   };
 
-  const handleImageChange = (e) => {
-    const files = e.target.files;
+  const handleCancel = () => {
+    setSelectedImgs([]);
+  };
 
-    // Check if adding more than 4 images
-    if (selectedImgs.length + files.length > 4) {
-      alert('You can upload up to 4 images.');
-      // Optionally, you can clear the input to visually reflect the limit
-      e.target.value = '';
+  const handlePosterImg = (e) => {
+    setIsLoading(true);
+    const files = e.target.files;
+  
+    if (files.length === 0) {
+      setIsLoading(false);
       return;
     }
-
-    // Create an array of new images
-    const newImages = Array.from(files)
-      .slice(0, 4 - selectedImgs.length) // Only add images to make the total count up to 4
-      .map((file) => ({
-        id: Date.now(),
-        photo: URL.createObjectURL(file),
-        newImage: file,
-      }));
-
-    // Concatenate the new images with the existing ones
-    setSelectedImgs((prevImages) => [...prevImages, ...newImages]);
-
-    // Backup the previous images
-    setBackupImgs([...selectedImgs]);
+  
+    if (selectedImgs.length + files.length > 4) {
+      setIsLoading(false);
+      e.target.value = '';
+      alert('You can only upload a maximum of four images.');
+      return;
+    }
+  
+    try {
+      Promise.all(
+        Array.from(files).map(async (file) => {
+          // Check if file size is less than or equal to 5 MB
+          if (file.size > 5 * 1024 * 1024) {
+            setIsLoading(false);
+            alert('Please select only JPG images with size less than 5 MB');
+            return null; // Return null for this file
+          }
+  
+          const formData = new FormData();
+          formData.append('ps-img', file, 'ps-img.jpg'); // Ensure file name is 'ps-img.jpg'
+  
+          try {
+            const response = await axios.post(`${process.env.REACT_APP_BASE_URL}/api/upload/events`, formData);
+            if (response.data.success === true) {
+              return response.data.data[0].imageUrl;
+            }
+            alert('Error uploading image:');
+            return null;
+          } catch (error) {
+            console.error('Error uploading image:', error);
+            alert('Error uploading image:');
+            return null;
+          }
+        })
+      ).then((uploadedImgUrls) => {
+        const filteredUrls = uploadedImgUrls.filter((url) => url !== null);
+        setSelectedImgs((prevSelectedImgs) => [...prevSelectedImgs, ...filteredUrls]);
+      });
+    } catch (error) {
+      console.error('Error uploading images:', error);
+      alert('Error uploading image:');
+    } finally {
+      setIsLoading(false);
+    }
   };
-
-  const handleCancel = () => {
-    // Store a copy of the current selected images before clearing
-    // setBackupImgs([...selectedImgs]);
-    fileInputRef.current.value = '';
-    // Clear the selected images
-    setSelectedImgs([]);
-    // setUserInputs({
-    //   photo: [],
-    //   newImage: null
-    // })
-  };
-
-  // const hasNonEmptyFields = (inputs) => {
-  //   return Object.entries(inputs).some(([key, value]) => {
-  //     if (Array.isArray(value)) {
-  //       return value.length > 0;
-  //     }
-  //     return value !== '' && value !== null;
-  //   });
-  // };
 
   useEffect(() => {
     const fetchTags = async () => {
@@ -185,7 +195,8 @@ export default function Tags() {
       oldRecord: true,
       // Add more fields as needed
     });
-    setSelectedImgs(tag);
+    
+    setSelectedImgs(tag.photo);
     setBackupImgs(tag);
   };
 
@@ -199,51 +210,27 @@ export default function Tags() {
       return;
     }
 
-    if (selectedImgs.photo === undefined) {
-      if (selectedImgs.length === 0) {
-        alert('Please select at least one image');
-        return;
-      }
+    if (!selectedImgs || selectedImgs.length === 0) {
+      alert('Please select at least one image');
+      return;
     }
 
     setIsSubmitting(true);
     setIsLoading(true);
     try {
-      let imageUrls;
-
-      if (selectedImgs.photo === undefined) {
-        if (selectedImgs.length === 0) {
-          alert('Please select at least one image');
-          return;
-        }
-        // If a new image is selected, upload it and get the image URLs
-        imageUrls = selectedImgs.map((img) => img.photo); // Assuming selectedImgs is an array
-        if (selectedImgs.some((img) => img.newImage)) {
-          const formData = new FormData();
-
-          // Append each new image to the FormData
-          selectedImgs.forEach((img) => {
-            if (img.newImage) {
-              formData.append('ps-img', img.newImage);
-            }
-          });
-
-          const uploadResponse = await axios.post(`${process.env.REACT_APP_BASE_URL}/api/upload/events`, formData);
-          imageUrls = uploadResponse.data.data.map((file) => file.imageUrl);
-        }
-      } else {
-        imageUrls = selectedImgs.photo;
-      }
+     
       const data = {
         name: userInputs.name,
         tag_type: userInputs.tag_type,
-        photo: imageUrls,
+        photo: selectedImgs,
         is_recommended: true,
       };
 
       // Make the API call to insert or update the tag data
       const headers = {
         'x-security-header': process.env.REACT_APP_X_SECURITY_HEADER,
+        authorization:
+        `Bearer ${logData?.total?.refreshToken}`
       };
       let response;
       if (userInputs._id !== '') {
@@ -425,13 +412,13 @@ export default function Tags() {
                       ? selectedImgs.map((img, index) => (
                           <Grid item xs={4} key={index} gap={2} spacing={2} mt={1}>
                             <img
-                              src={img.photo}
+                              src={img}
                               alt={`${index + 1}`}
                               style={{ width: '100%', height: '100%', objectFit: 'cover', padding: '10px' }}
                             />
                           </Grid>
                         ))
-                      : selectedImgs.photo.map((img, index) => (
+                      : selectedImgs.map((img, index) => (
                           <Grid item xs={4} key={index} mt={1}>
                             <img
                               src={img}
@@ -443,7 +430,7 @@ export default function Tags() {
                   </Grid>
 
                   <Grid item xs={12}>
-                    <input ref={fileInputRef} type="file" accept="image/*" multiple onChange={handleImageChange} />
+                    <input id="ps-img" type="file" name="ps-img" onChange={handlePosterImg} multiple />
                   </Grid>
                   <Grid item xs={8}>
                     {/* something */}

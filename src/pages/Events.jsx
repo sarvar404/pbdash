@@ -12,12 +12,14 @@ import {
   CardHeader,
   CircularProgress,
   Container,
+  FormControlLabel,
   Grid,
   IconButton,
   InputLabel,
   MenuItem,
   Select,
   Stack,
+  Switch,
   TextField,
   Typography,
 } from '@mui/material';
@@ -61,6 +63,11 @@ export default function Events() {
 
   const logData = getStoredUserData(KEY_ADMIN);
 
+  const [eventType, setEventType] = useState(false); // State for toggle
+  const today = new Date(); // Get current date
+  const initialStartAt = today.toISOString().substr(0, 10); // Format to "YYYY-MM-DD"
+  const initialEndAt = today.toISOString().substr(0, 10); // Format to "YYYY-MM-DD"
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [events, setEvents] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -68,99 +75,160 @@ export default function Events() {
   const [selectedImgs, setSelectedImgs] = useState([]);
   const [tagList, setTagList] = useState([]);
   const fileInputRef = useRef(null);
-
   const [userInputs, setUserInputs] = useState({
     _id: '',
     name: '',
     stars: '',
-    event_type: '',
     reward_type: '',
-    tags: '', // Update the data type based on your requirements
-    photo: [], // Add the photo key
-    newImage: null, // Add the newImage key with a default value
-    // Add more fields as needed
+    tags: '',
+    photo: [],
+    newImage: null,
     oldRecord: false,
+    startAt: initialStartAt, // Initialize with current date
+    endAt: initialEndAt,     // Initialize with current date
+    frequency : 'D',
+    maxCount : 1,
   });
 
   const handleInputs = (e) => {
-    if (e.target && e.target.name) {
-      const inputValue = e.target.value;
+    const { name, value } = e.target;
 
-      // Handle the "name" field
-      if (e.target.name === 'name') {
-        if (inputValue.length <= 20) {
-          setUserInputs((prevInputs) => ({
-            ...prevInputs,
-            [e.target.name]: inputValue,
-          }));
-        } else {
-          alert('Name must be up to 20 characters.');
-        }
-      }
-
-      // Handle the "stars" field
-      if (e.target.name === 'stars') {
-        if (/^\d{0,2}$/.test(inputValue)) {
-          setUserInputs((prevInputs) => ({
-            ...prevInputs,
-            [e.target.name]: inputValue,
-          }));
-        } else {
-          alert('Stars must be a number with at most 2 digits.');
-        }
-      }
-
-      // Handle other fields
-      if (['event_type', 'reward_type', 'tags'].includes(e.target.name)) {
+    // Handle the "name" field
+    if (name === 'name') {
+      if (value.length <= 20) {
         setUserInputs((prevInputs) => ({
           ...prevInputs,
-          [e.target.name]: inputValue,
+          [name]: value,
         }));
+      } else {
+        alert('Name must be up to 20 characters.');
       }
+    }
+
+    // Handle the "startAt" and "endAt" fields
+    if (name === 'startAt' || name === 'endAt') {
+      // Convert input values to Date objects
+      const startAt = name === 'startAt' ? new Date(value) : userInputs.startAt;
+      const endAt = name === 'endAt' ? new Date(value) : userInputs.endAt;
+
+      // Check if both start and end dates are set and if end date is before start date
+      if (startAt && endAt && endAt < startAt) {
+        alert('End date cannot be before the start date.');
+        return; // Prevent updating state if validation fails
+      }
+
+      // Update state for date fields
+      setUserInputs((prevInputs) => ({
+        ...prevInputs,
+        [name]: value,
+      }));
+    }
+
+    // Handle the "frequency" dropdown
+    if (name === 'frequency') {
+      setUserInputs((prevInputs) => ({
+        ...prevInputs,
+        [name]: value,
+      }));
+    }
+
+    if (name === 'maxCount') {
+      if (/^\d{0,2}$/.test(value)) { // Validates that it's a number with at most 2 digits
+        const intValue = parseInt(value, 10); // Parse the value to an integer
+        if (intValue > 0) { // Check if the value is positive
+          setUserInputs((prevInputs) => ({
+            ...prevInputs,
+            [name]: intValue.toString(), // Convert back to string before setting state
+          }));
+        } else {
+          alert('Max Count must be a positive number with at most 2 digits.');
+        }
+      } else {
+        alert('Max Count must be a number with at most 2 digits.');
+      }
+    }
+    
+    
+
+    // Handle the "stars" field
+    if (name === 'stars') {
+      if (/^\d{0,2}$/.test(value)) {
+        setUserInputs((prevInputs) => ({
+          ...prevInputs,
+          [name]: value,
+        }));
+      } else {
+        alert('Stars must be a number with at most 2 digits.');
+      }
+    }
+
+    // Handle other fields
+    if (['event_type', 'reward_type', 'tags'].includes(name)) {
+      setUserInputs((prevInputs) => ({
+        ...prevInputs,
+        [name]: value,
+      }));
     }
   };
 
-  const handleImageChange = (e) => {
+
+  const handleCancel = () => {
+    setSelectedImgs([]);
+  };
+
+  const handlePosterImg = (e) => {
+    setIsLoading(true);
     const files = e.target.files;
   
-    // Check if adding more than 4 images
-    if (selectedImgs.length + files.length > 4) {
-      alert('You can upload up to 4 images.');
-      // Optionally, you can clear the input to visually reflect the limit
-      e.target.value = '';
+    if (files.length === 0) {
+      setIsLoading(false);
       return;
     }
   
-    // Create an array of new images
-    const newImages = Array.from(files)
-      .slice(0, 4 - selectedImgs.length) // Only add images to make the total count up to 4
-      .map((file) => ({
-        id: Date.now(),
-        photo: URL.createObjectURL(file),
-        newImage: file,
-      }));
+    if (selectedImgs.length + files.length > 4) {
+      setIsLoading(false);
+      e.target.value = '';
+      alert('You can only upload a maximum of four images.');
+      return;
+    }
   
-    // Concatenate the new images with the existing ones
-    setSelectedImgs((prevImages) => [...prevImages, ...newImages]);
+    try {
+      Promise.all(
+        Array.from(files).map(async (file) => {
+          // Check if file size is less than or equal to 5 MB
+          if (file.size > 5 * 1024 * 1024) {
+            setIsLoading(false);
+            alert('Please select only JPG images with size less than 5 MB');
+            return null; // Return null for this file
+          }
   
-    // Backup the previous images
-    setBackupImgs([...selectedImgs]);
+          const formData = new FormData();
+          formData.append('ps-img', file, 'ps-img.jpg'); // Ensure file name is 'ps-img.jpg'
+  
+          try {
+            const response = await axios.post(`${process.env.REACT_APP_BASE_URL}/api/upload/events`, formData);
+            if (response.data.success === true) {
+              return response.data.data[0].imageUrl;
+            }
+            alert('Error uploading image:');
+            return null;
+          } catch (error) {
+            console.error('Error uploading image:', error);
+            alert('Error uploading image:');
+            return null;
+          }
+        })
+      ).then((uploadedImgUrls) => {
+        const filteredUrls = uploadedImgUrls.filter((url) => url !== null);
+        setSelectedImgs((prevSelectedImgs) => [...prevSelectedImgs, ...filteredUrls]);
+      });
+    } catch (error) {
+      console.error('Error uploading images:', error);
+      alert('Error uploading image:');
+    } finally {
+      setIsLoading(false);
+    }
   };
-  
-  
-
-  const handleCancel = () => {
-    // Store a copy of the current selected images before clearing
-    // setBackupImgs([...selectedImgs]);
-    fileInputRef.current.value = '';
-    // Clear the selected images
-    setSelectedImgs([]);
-    // setUserInputs({
-    //   photo: [],
-    //   newImage: null
-    // })
-  };
-  
   
 
   const hasNonEmptyFields = (inputs) => {
@@ -178,8 +246,7 @@ export default function Events() {
       try {
         const headers = {
           'x-security-header': process.env.REACT_APP_X_SECURITY_HEADER,
-          authorization:
-          `Bearer ${logData?.total?.refreshToken}`
+          authorization: `Bearer ${logData?.total?.refreshToken}`,
         };
 
         // Fetch data from the first API
@@ -190,7 +257,6 @@ export default function Events() {
           }
         );
         setEvents(eventResponse.data.data);
-
       } catch (error) {
         // Handle error here
         console.error('Error fetching data:', error);
@@ -257,25 +323,27 @@ export default function Events() {
       console.error('Invalid tags structure:', data.tags);
       return;
     }
-
     // Populate the form fields when a tag is clicked
     setUserInputs({
       _id: data._id,
       name: data.name,
       stars: data.stars,
-      max_count: data.max_count,
-      event_type: data.event_type,
       reward_type: data.reward_type ? 'CR' : 'DR',
       tags: tagIds,
       oldRecord: true,
+      startAt: data.start_at ? data.start_at : initialStartAt,
+      endAt: data.end_at ? data.end_at : initialEndAt,
+      frequency: data.frequency ? data.frequency : 'D',
+      maxCount: data.max_count ? data.max_count.toString() : '1',
       // Add more fields as needed
     });
-    setSelectedImgs(data);
+    setEventType(data.event_type);
+    setSelectedImgs(data?.photo);
     setBackupImgs(data);
   };
 
   const [successMessage, setSuccessMessage] = useState('');
-
+  
   const submit = async (e) => {
     e.preventDefault();
 
@@ -284,11 +352,9 @@ export default function Events() {
       return;
     }
 
-    if (selectedImgs.photo === undefined) {
-      if (selectedImgs.length === 0) {
-        alert('Please select at least one image');
-        return;
-      }
+    if (!selectedImgs || selectedImgs.length === 0) {
+      alert('Please select at least one image');
+      return;
     }
 
     if (userInputs.stars === 0 || userInputs.stars === "0" || userInputs.stars === "00") {
@@ -299,46 +365,28 @@ export default function Events() {
     setIsSubmitting(true);
     setIsLoading(true);
     try {
-      let imageUrls;
-
-      if (selectedImgs.photo === undefined) {
-        if (selectedImgs.length === 0) {
-          alert('Please select at least one image');
-          return;
-        }
-        // If a new image is selected, upload it and get the image URLs
-        imageUrls = selectedImgs.map((img) => img.photo); // Assuming selectedImgs is an array
-        if (selectedImgs.some((img) => img.newImage)) {
-          const formData = new FormData();
-
-          // Append each new image to the FormData
-          selectedImgs.forEach((img) => {
-            if (img.newImage) {
-              formData.append('ps-img', img.newImage);
-            }
-          });
-
-          const uploadResponse = await axios.post(`${process.env.REACT_APP_BASE_URL}/api/upload/events`, formData);
-          imageUrls = uploadResponse.data.data.map((file) => file.imageUrl);
-        }
-      } else {
-        imageUrls = selectedImgs.photo;
-      }
+      
       const data = {
         _id: userInputs._id,
         name: userInputs.name,
         stars: userInputs.stars,
-        photo: imageUrls,
-        reward_type: userInputs.reward_type, // Add the appropriate field
+        photo: selectedImgs,
         event_type: userInputs.event_type, // Add the appropriate field
         tags: userInputs.tags, // Add the appropriate field
         is_recommended: true,
+        startAt: userInputs.startAt,
+        endAt: userInputs.endAt,
+        eventType,
+        frequency : userInputs.frequency,
+        maxCount : userInputs.maxCount,
         // Add more fields as needed
       };
 
       // Make the API call to insert or update the tag data
       const headers = {
         'x-security-header': process.env.REACT_APP_X_SECURITY_HEADER,
+        authorization:
+        `Bearer ${logData?.total?.refreshToken}`
       };
       const response = await axios.post(`${process.env.REACT_APP_BASE_URL}/api/events/add-recommended-event`, data, {
         headers,
@@ -362,8 +410,14 @@ export default function Events() {
 
       // add here loader until response done.
     } catch (error) {
+      console.log(error.message);
       // Handle error here
       console.error('Error submitting data:', error);
+      if (error.response && error.response.data && error.response.data.error === "Event Already Exist") {
+        alert("This event already exists and cannot be changed now.");
+      } else {
+        alert("Service error");
+      }
     }
 
     setIsLoading(false);
@@ -544,19 +598,78 @@ export default function Events() {
                     </Select>
                   </Grid>
 
+                  {eventType && ( // Conditional rendering based on toggle status
+                    <>
+                      <Grid item xs={6} mt={2}>
+                        <TextField
+                          label="Start Date *"
+                          variant="standard"
+                          size="small"
+                          style={{ width: '100%' }}
+                          type="date"
+                          name="startAt"
+                          value={userInputs.startAt}
+                          onChange={handleInputs}
+                        />
+                      </Grid>
+                      <Grid item xs={6} mt={2}>
+                        <TextField
+                          label="End Date *"
+                          variant="standard"
+                          size="small"
+                          style={{ width: '100%' }}
+                          type="date"
+                          name="endAt"
+                          value={userInputs.endAt}
+                          onChange={handleInputs}
+                        />
+                      </Grid>
+                      <Grid item xs={6} mt={2}>
+                        <Select
+                          labelId="tag-type-label"
+                          id="tag-type"
+                          name="frequency"
+                          value={userInputs.frequency}
+                          onChange={handleInputs}
+                          label="Reward Type"
+                          style={{ width: '100%' }}
+                          size="small"
+                        >
+                          {/* Menu items with corresponding values */}
+                          <MenuItem value="D">Daily</MenuItem>
+                          <MenuItem value="M">Monthly</MenuItem>
+                          <MenuItem value="W">Weekly</MenuItem>
+                        </Select>
+                      </Grid>
+                      <Grid item xs={6} mt={2}>
+                        <TextField
+                          label="Max Count"
+                          variant="standard"
+                          size="small"
+                          style={{ width: '100%' }}
+                          type="number"
+                          name="maxCount"
+                          value={userInputs.maxCount}
+                          onChange={handleInputs}
+                        />
+                      </Grid>
+                    </>
+                  )}
+
                   {/* Add other fields as needed */}
                   <Grid item xs={12} style={{ display: 'inline-flex' }}>
+                    
                     {Array.isArray(selectedImgs)
                       ? selectedImgs.map((img, index) => (
                           <Grid item xs={4} key={index} gap={2} spacing={2} mt={1}>
                             <img
-                              src={img.photo}
+                              src={img}
                               alt={`${index + 1}`}
                               style={{ width: '100%', height: '100%', objectFit: 'cover', padding: '10px' }}
                             />
                           </Grid>
                         ))
-                      : selectedImgs.photo.map((img, index) => (
+                      : selectedImgs.map((img, index) => (
                           <Grid item xs={4} key={index} mt={1}>
                             <img
                               src={img}
@@ -568,7 +681,7 @@ export default function Events() {
                   </Grid>
 
                   <Grid item xs={12}>
-                    <input ref={fileInputRef} type="file" accept="image/*" multiple onChange={handleImageChange} />
+                    <input id="ps-img" type="file" name="ps-img" onChange={handlePosterImg} multiple />
                   </Grid>
                   <Grid item xs={8}>
                     {/* something */}
@@ -576,16 +689,37 @@ export default function Events() {
                 </Grid>
               </Container>
               <CustomGrid item xs={12} sm={12} lg={12} mt={2}>
-                <Box sx={{display: 'inline-flex',whiteSpace: 'nowrap'}}>
-                  <Button variant="contained" type="submit" disabled={isSubmitting} sx={{marginRight : '2px'}}>
+                <Box sx={{ display: 'inline-flex', whiteSpace: 'nowrap' }}>
+                  <Button variant="contained" type="submit" disabled={isSubmitting} sx={{ marginRight: '2px' }}>
                     {isSubmitting ? 'Submitting...' : 'Submit'}
                   </Button>
-                  <Button variant="contained" disabled={isSubmitting} onClick={handleCancel} sx={{marginRight : '2px'}}>
+                  <Button
+                    variant="contained"
+                    disabled={isSubmitting}
+                    onClick={handleCancel}
+                    sx={{ marginRight: '2px' }}
+                  >
                     Clear Images
                   </Button>
-                  <Button variant="contained" disabled={isSubmitting} onClick={handleReloadForm}>
+                  <Button
+                    variant="contained"
+                    disabled={isSubmitting}
+                    onClick={handleReloadForm}
+                    sx={{ marginRight: '5px' }}
+                  >
                     Clear Form
                   </Button>
+                  <FormControlLabel
+                    control={
+                      <Switch
+                        checked={eventType}
+                        onChange={() => setEventType(!eventType)}
+                        name="toggle"
+                        color="primary"
+                      />
+                    }
+                    label="Recurring Events" // Toggle label
+                  />
                 </Box>
               </CustomGrid>
             </form>
