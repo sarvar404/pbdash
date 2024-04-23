@@ -94,13 +94,13 @@ export default function Tags() {
       const inputValue = e.target.value;
 
       // Check if the entered text exceeds 10 characters
-      if (inputValue.length <= 20) {
+      if (inputValue.length <= 30) {
         setUserInputs((prevInputs) => ({
           ...prevInputs,
           [e.target.name]: inputValue,
         }));
       } else {
-        alert('Upto 20 characters are allowed');
+        alert('Upto 30 characters are allowed');
       }
       // Optionally, you can display an error message or handle it as per your requirements
     }
@@ -129,6 +129,14 @@ export default function Tags() {
     try {
       Promise.all(
         Array.from(files).map(async (file) => {
+
+          if (!file.type.startsWith('image/jpeg') && !file.type.startsWith('image/jpg')) {
+            setIsLoading(false);
+            setImgLoader(false);
+            alert('Please select only JPG images.');
+            return null;
+          }
+
           // Check if file size is less than or equal to 5 MB
           if (file.size > 5 * 1024 * 1024) {
             setIsLoading(false);
@@ -145,12 +153,12 @@ export default function Tags() {
             if (response.data.success === true) {
               return response.data.data[0].imageUrl;
             }
-            alert('Error uploading image : Please select correct image format');
+            alert('Error uploading image : Please upload jpg image only & file should not be corrupted');
             setImgLoader(false);
             return null;
           } catch (error) {
             console.error('Error uploading image:', error);
-            alert('Error uploading image : Please select correct image format');
+            alert('Error uploading image : Please upload jpg image only & file should not be corrupted');
             setImgLoader(false);
             return null;
           }
@@ -161,7 +169,7 @@ export default function Tags() {
       });
     } catch (error) {
       console.error('Error uploading images:', error);
-      alert('Error uploading image : Please select correct image format');
+      alert('Error uploading image : Please upload jpg image only & file should not be corrupted');
       setImgLoader(false);
     } finally {
       setIsLoading(false);
@@ -285,11 +293,11 @@ export default function Tags() {
       if (response.data.success === true) {
         alert('Tag deleted successfully');
       } else {
-        alert('response.data.message');
+        alert("Used tag cannot be deleted");
         console.error('Error deleting tag:', response.data.error);
       }
     } catch (error) {
-      alert(error.response.data.message);
+      alert("Used tag cannot be deleted");
       console.error('Error deleting tag:', error);
     } finally {
       setTimeout(() => {

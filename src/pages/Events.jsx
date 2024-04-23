@@ -91,13 +91,13 @@ export default function Events() {
 
     // Handle the "name" field
     if (name === 'name') {
-      if (value.length <= 20) {
+      if (value.length <= 30) {
         setUserInputs((prevInputs) => ({
           ...prevInputs,
           [name]: value,
         }));
       } else {
-        alert('Name must be up to 20 characters.');
+        alert('Name must be up to 30 characters.');
       }
     }
 
@@ -129,22 +129,28 @@ export default function Events() {
     }
 
     if (name === 'maxCount') {
-      if (/^\d{0,2}$/.test(value)) {
-        // Validates that it's a number with at most 2 digits
-        const intValue = parseInt(value, 10); // Parse the value to an integer
-        if (intValue > 0) {
-          // Check if the value is positive
-          setUserInputs((prevInputs) => ({
+      // Check if the value is empty or a number with at most 2 digits
+      if (value === '' || /^\d{0,2}$/.test(value)) {
+        if (value === '' || parseInt(value, 10) > 0) {
+          setUserInputs(prevInputs => ({
             ...prevInputs,
-            [name]: intValue.toString(), // Convert back to string before setting state
+            [name]: value === '' ? '' : parseInt(value, 10).toString(),
+          }));
+        } else if (parseInt(value, 10) === 0) {
+          setUserInputs(prevInputs => ({
+            ...prevInputs,
+            [name]: '1',
           }));
         } else {
-          alert('Max Count must be a positive number with at most 2 digits.');
+          alert('Max Count must be a positive number.');
         }
       } else {
         alert('Max Count must be a number with at most 2 digits.');
       }
     }
+    
+    
+    
 
     // Handle the "stars" field
     if (name === 'stars') {
@@ -190,6 +196,14 @@ export default function Events() {
     try {
       Promise.all(
         Array.from(files).map(async (file) => {
+          // Check image type
+          if (!file.type.startsWith('image/jpeg') && !file.type.startsWith('image/jpg')) {
+            setIsLoading(false);
+            setImgLoader(false);
+            alert('Please select only JPG images.');
+            return null;
+          }
+
           // Check if file size is less than or equal to 5 MB
           if (file.size > 5 * 1024 * 1024) {
             setIsLoading(false);
@@ -206,12 +220,12 @@ export default function Events() {
             if (response.data.success === true) {
               return response.data.data[0].imageUrl;
             }
-            alert('Error uploading image : Please select correct image format');
+            alert('Error uploading image : Please upload jpg image only & file should not be corrupted');
             setImgLoader(false);
             return null;
           } catch (error) {
             console.error('Error uploading image:', error);
-            alert('Error uploading image : Please select correct image format');
+            alert('Error uploading image : Please upload jpg image only & file should not be corrupted');
             setImgLoader(false);
             return null;
           }
@@ -222,12 +236,13 @@ export default function Events() {
       });
     } catch (error) {
       console.error('Error uploading images:', error);
-      alert('Error uploading image : Please select correct image format');
+      alert('Error uploading image : Please upload jpg image only & file should not be corrupted');
       setImgLoader(false);
     } finally {
       setIsLoading(false);
     }
-  };
+};
+
 
   const hasNonEmptyFields = (inputs) => {
     return Object.entries(inputs).some(([key, value]) => {
@@ -352,6 +367,23 @@ export default function Events() {
     if (userInputs.stars === 0 || userInputs.stars === '0' || userInputs.stars === '00') {
       alert('Stars cannot be 0 or Negative');
       return;
+    }
+
+    if (eventType === true) {
+
+      if (!userInputs.startAt.trim() || !userInputs.endAt.trim()) {
+        alert('Start date and end date cannot be empty');
+        return;
+      }
+    
+
+
+      if (new Date(userInputs.endAt) < new Date(userInputs.startAt)) {
+        alert('End date cannot be earlier than start date');
+        return;
+      }
+
+
     }
 
     setIsSubmitting(true);
@@ -635,7 +667,7 @@ export default function Events() {
                       </Grid>
                       <Grid item xs={6} mt={2}>
                         <TextField
-                          label="Max Count"
+                          label="Max Count *"
                           variant="standard"
                           size="small"
                           style={{ width: '100%' }}
