@@ -634,6 +634,12 @@ export default function Events() {
                           name="startAt"
                           value={userInputs.startAt}
                           onChange={handleInputs}
+                          InputLabelProps={{
+                            shrink: true,
+                          }}
+                          inputProps={{
+                            min: new Date().toISOString().split('T')[0], // Set minimum date to today
+                          }}
                         />
                       </Grid>
                       <Grid item xs={6} mt={2}>
@@ -646,6 +652,12 @@ export default function Events() {
                           name="endAt"
                           value={userInputs.endAt}
                           onChange={handleInputs}
+                          InputLabelProps={{
+                            shrink: true,
+                          }}
+                          inputProps={{
+                            min: new Date().toISOString().split('T')[0], // Set minimum date to today
+                          }}
                         />
                       </Grid>
                       <Grid item xs={6} mt={2}>

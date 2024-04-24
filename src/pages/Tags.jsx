@@ -275,7 +275,7 @@ export default function Tags() {
   };
   const handleDelete = async (tagId) => {
     try {
-      const confirmed = window.confirm('Are you sure you want to delete this event?');
+      const confirmed = window.confirm('Are you sure you want to delete this tag?');
       if (!confirmed) {
         return; // Exit the function if the user cancels the deletion
       }

@@ -12,6 +12,7 @@ import Tags from './pages/Tags';
 import Events from './pages/Events';
 import { getStoredUserData } from './pages/context/Utils';
 import { KEY_ADMIN, role } from './enum';
+import Notification from './pages/Notification';
 
 //
 // get access
@@ -36,6 +37,7 @@ export default function Router() {
         { path: 'dashboard', element: <DashboardAppPage /> },
         { path: 'tags', element: <Tags /> },
         { path: 'events', element: <Events /> },
+        { path: 'notification', element: <Notification /> },
       ],
     },
     {
