@@ -13,6 +13,7 @@ import Events from './pages/Events';
 import { getStoredUserData } from './pages/context/Utils';
 import { KEY_ADMIN, role } from './enum';
 import Notification from './pages/Notification';
+import Billings from './pages/Billings';
 
 //
 // get access
@@ -38,6 +39,7 @@ export default function Router() {
         { path: 'tags', element: <Tags /> },
         { path: 'events', element: <Events /> },
         { path: 'notification', element: <Notification /> },
+        { path: 'bills', element: <Billings /> },
       ],
     },
     {
